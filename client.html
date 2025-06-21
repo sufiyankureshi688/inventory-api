@@ -1,0 +1,97 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Inventory Manager</title>
+  <style>
+    body { font-family: Arial; background: #f4f4f4; padding: 2rem; }
+    h1 { color: #333; }
+    input, button { margin: 5px 0; padding: 8px; width: 100%; max-width: 400px; }
+    .product-card { background: white; padding: 10px; margin: 10px 0; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .product-card input { width: 100%; margin-bottom: 5px; }
+  </style>
+</head>
+<body>
+  <h1>📦 Inventory Manager</h1>
+  <form id="addForm">
+    <h3>Add New Product</h3>
+    <input type="text" id="name" placeholder="Name" required />
+    <input type="text" id="category" placeholder="Category" required />
+    <input type="number" id="price" placeholder="Price" required />
+    <input type="number" id="quantity" placeholder="Quantity" required />
+    <button type="submit">Add Product</button>
+  </form>
+  <h3>📋 Product List</h3>
+  <div id="productList">Loading...</div>
+  <script>
+    const api = "http://localhost:3000/products";
+  
+    async function fetchProducts() {
+      const res = await fetch(api);
+      const products = await res.json();
+      const list = document.getElementById("productList");
+      list.innerHTML = "";
+  
+      products.forEach(product => {
+        const div = document.createElement("div");
+        div.className = "product-card";
+        div.innerHTML = `
+          <strong>ID: ${product.id}</strong><br/>
+          <input type="text" value="${product.name}" data-field="name" />
+          <input type="text" value="${product.category}" data-field="category" />
+          <input type="number" value="${product.price}" data-field="price" />
+          <input type="number" value="${product.quantity}" data-field="quantity" />
+          <button onclick="updateProduct(${product.id}, this)">Update</button>
+          <button onclick="deleteProduct(${product.id})">Delete</button>
+        `;
+        list.appendChild(div);
+      });
+    }
+  
+    async function updateProduct(id, button) {
+      const card = button.parentElement;
+      const inputs = card.querySelectorAll("input");
+      const data = {};
+      inputs.forEach(input => {
+        const key = input.dataset.field;
+        data[key] = input.type === "number" ? parseFloat(input.value) : input.value;
+      });
+  
+      await fetch(`${api}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+  
+      fetchProducts();
+    }
+  
+    async function deleteProduct(id) {
+      await fetch(`${api}/${id}`, { method: "DELETE" });
+      fetchProducts();
+    }
+  
+    document.getElementById("addForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const product = {
+        name: document.getElementById("name").value,
+        category: document.getElementById("category").value,
+        price: parseFloat(document.getElementById("price").value),
+        quantity: parseInt(document.getElementById("quantity").value),
+      };
+  
+      await fetch(api, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(product),
+      });
+  
+      fetchProducts();
+      e.target.reset();
+    });
+  
+    fetchProducts();
+  </script>  
+</body>
+</html>
