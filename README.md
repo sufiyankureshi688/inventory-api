@@ -12,8 +12,8 @@ This is a Node.js + Express-based RESTful API for managing inventory items, with
 ## Run Locally
 
 ```bash
-npm install
-node server.js
+npm install        # Install Express and CORS
+node server.js     # Start the API server
 ```
 
 Then open `client.html` using:
